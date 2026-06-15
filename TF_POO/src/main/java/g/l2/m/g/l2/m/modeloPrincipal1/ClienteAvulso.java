@@ -1,6 +1,8 @@
-import java.time.LocalDateTime;
+package g.l2.m.modeloPrincipal1;
+
 import java.time.Duration;
-package g.l2.m.modelo;
+import java.time.LocalDateTime;
+
 
 public class ClienteAvulso {
     private String placa;
@@ -19,13 +21,21 @@ public class ClienteAvulso {
         return entrada;
     }
 
-    public Duration calculaTempo() {
+    public long calculaTempo() {
         LocalDateTime saida = LocalDateTime.now();
-        return Duration.between(entrada, saida);
+        return Duration.between(entrada, saida).toHours();
     }
 
-    public void cobranca() {
+    public long cobranca() {
         int valor = 12;
-        calculaTempo() = Duration
+        long tempo = calculaTempo();
+        int valorAdicional = 24;
+        if(tempo <= 6) {
+            return valor * tempo;
+        }
+        if(tempo > 6) {
+            return valor * tempo + valorAdicional;
+        }
+        if(entrada)
     }
 }
