@@ -1,4 +1,4 @@
-package g.l2.m;
+package g.l2.m.modeloPrincipal1;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;

@@ -1,15 +1,17 @@
+package g.l2.m.modeloPrincipal1;
+
 import java.util.HashSet;
 import java.util.Set;
-public class Professor extends ClientePre{
-    private Set<String> placas;
+public class Professor extends ClientePre {
+
 
     public Professor(String nome, String cpf) {
-        super(nome, cpf, 0);
+        super(nome, cpf);
         placas = new HashSet<>();
     }
 
     public boolean adicionarPlaca(String placa) {
-        if (placas.size() >= 2)
+        if (2 >= placas.size())
             return false;
             return placas.add(placa);
         }
