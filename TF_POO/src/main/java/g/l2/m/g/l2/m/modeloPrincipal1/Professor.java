@@ -1,8 +1,9 @@
 package g.l2.m.modeloPrincipal1;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-public class Professor extends ClientePre {
+public abstract class Professor extends ClientePre {
 
 
     public Professor(String nome, String cpf) {
@@ -11,14 +12,20 @@ public class Professor extends ClientePre {
     }
 
     public boolean adicionarPlaca(String placa) {
-        if (2 >= placas.size())
+        if (2 >= placas.size()){
             return false;
-            return placas.add(placa);
         }
+        return placas.add(placa);
+    }
 
-        public Set<String> getPlacas() {
+    @Override
+    public double calculaCusto(LocalDateTime entrada, LocalDateTime saida) {
+        return 0;
+    }
+
+    public Set<String> getPlacas() {
             return placas;
         }
-    }
 }
+
 
