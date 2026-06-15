@@ -1,5 +1,6 @@
 package g.l2.m.modeloPrincipal1;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 public abstract class ClientePre {
@@ -13,4 +14,5 @@ public abstract class ClientePre {
     }
 
     public abstract boolean adicionarPlaca(String placa);
+    public abstract double calculaCusto(LocalDateTime entrada, LocalDateTime saida);
 }
