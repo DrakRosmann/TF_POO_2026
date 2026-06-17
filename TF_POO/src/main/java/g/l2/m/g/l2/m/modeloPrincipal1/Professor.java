@@ -1,31 +1,29 @@
 package g.l2.m.modeloPrincipal1;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-public abstract class Professor extends ClientePre {
 
+public class Professor extends Cliente{
+    private static final int MAX_VEICULOS = 2;
 
-    public Professor(String nome, String cpf) {
-        super(nome, cpf);
-        placas = new HashSet<>();
-    }
-
-    public boolean adicionarPlaca(String placa) {
-        if (2 >= placas.size()){
-            return false;
-        }
-        return placas.add(placa);
+    public Professor(String cpf, String nome, String celular){
+        super(cpf,nome,celular);
     }
 
     @Override
-    public double calculaCusto(LocalDateTime entrada, LocalDateTime saida) {
-        return 0;
+    public void cadastraVeiculo(String placa) {
+        if (placas_veiculos.size() < MAX_VEICULOS) {
+            super.cadastraVeiculo(placa);
+        }else {
+            throw new IllegalArgumentException("LIMITE DE VEICULOS EXCEDIDO");
+        }
     }
 
-    public Set<String> getPlacas() {
-            return placas;
-        }
+    @Override
+    public TicketEntradaSaida calculaCusto(TicketEntradaSaida ticket, LocalDateTime horaSaida) {
+        ticket.setHoraSaida(horaSaida);
+        ticket.setValorCalculado(0.0);
+        ticket.setDesconto(0.0);
+        ticket.setValorCobrado(0.0);
+        return ticket;
+    }
 }
-
-

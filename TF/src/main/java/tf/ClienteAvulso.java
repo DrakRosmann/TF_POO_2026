@@ -1,9 +1,8 @@
-package g.l2.m.modeloPrincipal1;
+package tf;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-
 
 public class ClienteAvulso {
     private String placa;
@@ -36,18 +35,18 @@ public class ClienteAvulso {
         long pagarSem = valor * tempo;
         long pagarCom = valor * tempo + valorAdicional;
 
-        if(tempo <= 6) {
+        if (tempo <= 6) {
             return pagarSem;
-        }
-        if(tempo > 6 && tempo < 24) {
+        } else if (tempo > 6 && tempo < 24) {
             return pagarCom;
-        }
-        if(hora + tempo > 24){
+        } else if (hora + tempo > 24 && tempo <= 6) {
             return pagarSem + 12;
-        }
-        if(hora + tempo > 24 && tempo > 6){
+        } else if (hora + tempo > 24 && tempo > 6) {
             return pagarCom + 12;
         }
+
+        // Retorno padrão exigido pelo Java caso nenhuma condição seja aceita
+        return 0;
     }
 
     public void quer(boolean pagarSimxNao) {

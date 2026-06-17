@@ -3,32 +3,36 @@ package g.l2.m.modeloPrincipal1;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-public class Empresa extends ClientePre {
-    private double valorAcumulados;
-    private boolean inadimplente;
+public class Empresa extends Cliente{
+    private static final int DIARIA = 24;
+    private static final double MULTA_PERNOITE = 50.0;
+    private int debitos;
 
-    public Empresa(String nome, String cnpj) {
-        super(nome, cnpj);
-        this.valorAcumulados = 0;
-        this.inadimplente = false;
+    public Empresa(String cnpj, String nome, String celular){
+        super(cnpj, nome, celular);
+        debitos = 0;
     }
 
-    @Override
-    public boolean adicionarPlaca(String placa) {
-        placas.add(placa);
-        return true;
+    public int getDebitos() {
+        return debitos;
     }
 
-    @Override
-    public double calculaCusto(LocalDateTime entrada, LocalDateTime saida) {
-        long dias = ChronoUnit.DAYS.between(entrada.toLocalDate(), saida.toLocalDate());
-        double custoBase = 30.0 * (dias + 1);
-        if (saida.getHour() == 0 && saida.getMinute() > 0 || dias > 0) {
-            custoBase += 50.0;
+    public TicketEntradaSaida calculaCusto(TicketEntradaSaida ticket, LocalDateTime horaSaida) {
+        ticket.setHoraSaida(horaSaida);
+
+        long dias = ChronoUnit.DAYS.between(ticket.getHoraEntrada().toLocalDate(), horaSaida.toLocalDate());
+        double custoTotal = DIARIA;
+
+        if (dias > 0) {
+            custoTotal += (dias * DIARIA) + (dias * MULTA_PERNOITE);
         }
-        return custoBase;
-    }
 
-    public boolean isInadimplente() { return inadimplente; }
-    public void adicionarDebito(double valor) { this.valorAcumulados += valor; }
+        ticket.setValorCalculado(custoTotal);
+        ticket.setDesconto(0.0);
+        ticket.setValorCobrado(custoTotal);
+
+        this.debitos += custoTotal;
+
+        return ticket;
+    }
 }
