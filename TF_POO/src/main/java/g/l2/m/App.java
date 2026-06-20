@@ -1,5 +1,4 @@
-package g.l2.m.modeloPrincipal1;
-
+package g.l2.m;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

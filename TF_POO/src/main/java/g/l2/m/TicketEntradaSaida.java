@@ -1,6 +1,4 @@
-package g.l2.m.modeloPrincipal1;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 public class TicketEntradaSaida {
     private String placaVeiculo;
@@ -60,12 +58,12 @@ public class TicketEntradaSaida {
         this.horaSaida = horaSaida;
     }
 
-    public long calcularTotalHoras(){
+    /*public long calcularTotalHoras(){
         if(horaSaida == null) {
             throw new IllegalArgumentException("O ticket ainda não registrou o horário de saída");
             long minutos = ChronoUnit.MINUTES.between(horaEntrada, horaSaida);
             return (long) Math.ceil(minutos / 60.0);
         }
         return -1;
-    }
+    }*/
 }
