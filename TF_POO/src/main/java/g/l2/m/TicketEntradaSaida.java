@@ -1,3 +1,5 @@
+package g.l2.m;
+
 import java.time.LocalDateTime;
 
 public class TicketEntradaSaida {
@@ -9,16 +11,16 @@ public class TicketEntradaSaida {
     private double valorCobrado;
     private CategoriaCliente categoria;
 
-    public TicketEntradaSaida(String placaVeiculo,CategoriaCliente categoria ,LocalDateTime horaEntrada) {
+    public TicketEntradaSaida(String placaVeiculo, CategoriaCliente categoria, LocalDateTime horaEntrada) {
         if (placaVeiculo == null || placaVeiculo.trim().isEmpty()){
             throw new IllegalArgumentException("A placa do veículo é obrigatória");
         }
         this.placaVeiculo = placaVeiculo;
         this.categoria = categoria;
         this.horaEntrada = horaEntrada;
-        valorCalculado = 0.0;
-        desconto = 0.0;
-        valorCobrado = 0.0;
+        this.valorCalculado = 0.0;
+        this.desconto = 0.0;
+        this.valorCobrado = 0.0;
     }
 
     public String getPlacaVeiculo() { return placaVeiculo; }
@@ -32,13 +34,4 @@ public class TicketEntradaSaida {
     public double getValorCobrado() { return valorCobrado; }
     public void setValorCobrado(double valorCobrado) { this.valorCobrado = valorCobrado; }
     public CategoriaCliente getCategoria() { return categoria; }
-
-    /*public long calcularTotalHoras(){
-        if(horaSaida == null) {
-            throw new IllegalArgumentException("O ticket ainda não registrou o horário de saída");
-            long minutos = ChronoUnit.MINUTES.between(horaEntrada, horaSaida);
-            return (long) Math.ceil(minutos / 60.0);
-        }
-        return -1;
-    }*/
 }
