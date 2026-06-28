@@ -1,14 +1,19 @@
+package g.l2.m;
+import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+@Service // <-- ADICIONE ESTA LINHA AQUI
 public class CadastroCliente {
-private Map<String, Cliente> clientes;
-private Map<String, Cliente> placasCliente;
+    private Map<String, Cliente> clientes;
+    private Map<String, Cliente> placasCliente;
 
-public CadastroCliente() {
-    this.clientes = new HashMap<>();
-    this.placasCliente = new HashMap<>();
-}
+    public CadastroCliente() {
+        this.clientes = new HashMap<>();
+        this.placasCliente = new HashMap<>();
+    }
+
+    // ... resto do seu código continua igual ...
 
 public void adicionarCliente(Cliente cliente) {
     clientes.put(cliente.getCpf_cnpj(), cliente);

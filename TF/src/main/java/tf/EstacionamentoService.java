@@ -158,4 +158,5 @@ public class EstacionamentoService {
     public Map<String, RegistroEstacionamento> getVeiculosEstacionados() {
         return veiculosEstacionados;
     }
+
 }

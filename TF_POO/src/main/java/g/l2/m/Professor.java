@@ -1,3 +1,4 @@
+package g.l2.m;
 import java.time.LocalDateTime;
 
 public class Professor extends Cliente{
@@ -7,7 +8,7 @@ public class Professor extends Cliente{
         super(cpf,nome,celular);
     }
 
-    @Override;
+    @Override
     public void cadastraVeiculo(String placa) {
         if (placas_veiculos.size() < MAX_VEICULOS) {
             super.cadastraVeiculo(placa);
