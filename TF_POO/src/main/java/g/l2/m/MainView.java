@@ -17,7 +17,9 @@ import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 @Route("")
 public class MainView extends VerticalLayout {
@@ -25,13 +27,16 @@ public class MainView extends VerticalLayout {
     private final ServicoDeEstacionamento servico;
     private final CadastroCliente cadastro;
     
-    // Tabela que exibirá os clientes
+    // Tabelas (Grids) da interface
     private Grid<Cliente> gridClientes;
+    private Grid<Movimentacao> gridMovimentacoes;
+    private List<Movimentacao> historicoMovimentacoes;
 
     @Autowired
     public MainView(CadastroCliente cadastro, ServicoDeEstacionamento servico) {
         this.cadastro = cadastro;
         this.servico = servico;
+        this.historicoMovimentacoes = new ArrayList<>();
 
         setAlignItems(Alignment.CENTER);
         setSpacing(true);
@@ -47,8 +52,8 @@ public class MainView extends VerticalLayout {
         VerticalLayout colunaEsquerda = criarPainelEstacionamento();
         VerticalLayout colunaDireita = criarPainelClientes();
 
-        colunaEsquerda.setWidth("45%");
-        colunaDireita.setWidth("55%");
+        colunaEsquerda.setWidth("50%");
+        colunaDireita.setWidth("50%");
 
         painelPrincipal.add(colunaEsquerda, colunaDireita);
         add(painelPrincipal);
@@ -76,7 +81,17 @@ public class MainView extends VerticalLayout {
         btnEntrada.addClickListener(event -> registrarEntrada(placaField.getValue()));
         btnSaida.addClickListener(event -> registrarSaida(placaField.getValue()));
 
-        layout.add(subTitulo, placaField, btnEntrada, btnSaida);
+        // --- NOVA SEÇÃO: HISTÓRICO DE ENTRADAS E SAÍDAS ---
+        H3 subTituloLista = new H3("Histórico da Catraca");
+        gridMovimentacoes = new Grid<>();
+        gridMovimentacoes.setHeight("350px");
+
+        gridMovimentacoes.addColumn(Movimentacao::getPlaca).setHeader("Placa").setAutoWidth(true);
+        gridMovimentacoes.addColumn(Movimentacao::getOperacao).setHeader("Operação").setAutoWidth(true);
+        gridMovimentacoes.addColumn(Movimentacao::getHorarioFormatado).setHeader("Horário").setAutoWidth(true);
+        gridMovimentacoes.addColumn(Movimentacao::getDetalhes).setHeader("Detalhes").setAutoWidth(true);
+
+        layout.add(subTitulo, placaField, btnEntrada, btnSaida, subTituloLista, gridMovimentacoes);
         return layout;
     }
 
@@ -141,12 +156,10 @@ public class MainView extends VerticalLayout {
             }
         });
 
-        // --- NOVA SEÇÃO: CONFIGURAÇÃO DA TABELA (GRID) ---
         H3 subTituloLista = new H3("Clientes Cadastrados");
         gridClientes = new Grid<>();
         gridClientes.setHeight("250px");
         
-        // Configurando as colunas da tabela com base no seu modelo
         gridClientes.addColumn(Cliente::getNome).setHeader("Nome");
         gridClientes.addColumn(Cliente::getCpf_cnpj).setHeader("CPF/CNPJ");
         gridClientes.addColumn(Cliente::getCelular).setHeader("Celular");
@@ -158,40 +171,15 @@ public class MainView extends VerticalLayout {
         }).setHeader("Tipo");
         gridClientes.addColumn(c -> String.join(", ", c.getPlacas_veiculos())).setHeader("Placas");
 
-        // Alimenta a tabela inicialmente
-        atualizarTabela();
-
         layout.add(subTitulo, form, btnCadastrarCliente, subTituloPlaca, formPlaca, btnVincularPlaca, subTituloLista, gridClientes);
         return layout;
     }
-
-    /**
-     * Busca os clientes cadastrados na memória e recarrega a tabela da tela.
-     */
-    private void atualizarTabela() {
-        // Como o CadastroCliente original não possui um método "listarTodos", 
-        // criamos uma lista simulada baseada em lógica segura ou atualizações dinâmicas.
-        // No entanto, para funcionar perfeitamente com seu CadastroCliente sem alterar o backend, 
-        // usaremos uma estratégia inteligente de atualização direta.
-        if (cadastro != null && gridClientes != null) {
-            // Nota: Se futuramente você criar um método "cadastro.listarTodos()" retornando uma Collection<Cliente>,
-            // basta alterar a linha abaixo para: gridClientes.setItems(cadastro.listarTodos());
-            
-            // Para não quebrar sua classe original de CadastroCliente, vamos capturar as atualizações
-            // a partir do momento em que o Spring gerencia os beans.
-        }
-    }
     
-    // Método auxiliar para injetar dados direto na Grid sem mexer no CadastroCliente
     private void adicionarClienteNaGrid(Cliente cliente) {
-        // Buscamos os itens já existentes no grid, adicionamos o novo e atualizamos a tela
-        java.util.List<Cliente> listaAtual = new ArrayList<>();
+        List<Cliente> listaAtual = new ArrayList<>();
         gridClientes.getGenericDataView().getItems().forEach(listaAtual::add);
-        
-        // Se o cliente já existia (atualização de placa), removemos o antigo antes de por o novo
         listaAtual.removeIf(c -> c.getCpf_cnpj().equals(cliente.getCpf_cnpj()));
         listaAtual.add(cliente);
-        
         gridClientes.setItems(listaAtual);
     }
 
@@ -200,9 +188,14 @@ public class MainView extends VerticalLayout {
             mostrarNotificacao("Informe uma placa válida.", NotificationVariant.LUMO_WARNING);
             return;
         }
+        String placaFormatada = placa.trim().toUpperCase();
         try {
-            servico.entrada(placa.toUpperCase(), LocalDateTime.now());
-            mostrarNotificacao("Entrada liberada para o veículo: " + placa.toUpperCase(), NotificationVariant.LUMO_SUCCESS);
+            LocalDateTime agora = LocalDateTime.now();
+            servico.entrada(placaFormatada, agora);
+            mostrarNotificacao("Entrada liberada para o veículo: " + placaFormatada, NotificationVariant.LUMO_SUCCESS);
+            
+            // Registra no histórico visual
+            adicionarMovimentacaoGrid(new Movimentacao(placaFormatada, "ENTRADA", agora, "Catraca Liberada"));
         } catch (Exception e) {
             mostrarNotificacao(e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
@@ -213,20 +206,28 @@ public class MainView extends VerticalLayout {
             mostrarNotificacao("Informe uma placa válida.", NotificationVariant.LUMO_WARNING);
             return;
         }
+        String placaFormatada = placa.trim().toUpperCase();
         try {
-            TicketEntradaSaida ticket = servico.saida(placa.toUpperCase(), LocalDateTime.now());
+            LocalDateTime agora = LocalDateTime.now();
+            TicketEntradaSaida ticket = servico.saida(placaFormatada, agora);
             String mensagem = String.format("Saída liberada. Categoria: %s | Valor cobrado: R$ %.2f", 
                     ticket.getCategoria(), ticket.getValorCobrado());
             mostrarNotificacao(mensagem, NotificationVariant.LUMO_SUCCESS);
             
-            // Se o custo mudou o saldo/débito do cliente, recarregamos a exibição das placas no Grid
-            Cliente c = cadastro.buscarPorPlaca(placa.toUpperCase());
-            if (c != null) {
-                adicionarClienteNaGrid(c);
-            }
+            // Registra no histórico visual
+            String detalhes = String.format("R$ %.2f (%s)", ticket.getValorCobrado(), ticket.getCategoria());
+            adicionarMovimentacaoGrid(new Movimentacao(placaFormatada, "SAÍDA", agora, detalhes));
+
+            Cliente c = cadastro.buscarPorPlaca(placaFormatada);
+            if (c != null) adicionarClienteNaGrid(c);
         } catch (Exception e) {
             mostrarNotificacao(e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
+    }
+
+    private void adicionarMovimentacaoGrid(Movimentacao novaMovimentacao) {
+        historicoMovimentacoes.add(0, novaMovimentacao); // Adiciona sempre no topo da lista
+        gridMovimentacoes.setItems(historicoMovimentacoes);
     }
 
     private void cadastrarNovoCliente(String doc, String nome, String celular, CategoriaCliente categoria, Double saldo) {
@@ -253,7 +254,7 @@ public class MainView extends VerticalLayout {
         }
 
         cadastro.adicionarCliente(novoCliente);
-        adicionarClienteNaGrid(novoCliente); // Atualiza o Grid visual imediatamente!
+        adicionarClienteNaGrid(novoCliente); 
         mostrarNotificacao("Cliente " + nome + " (" + categoria + ") cadastrado com sucesso!", NotificationVariant.LUMO_SUCCESS);
     }
 
@@ -272,7 +273,7 @@ public class MainView extends VerticalLayout {
 
         cliente.cadastraVeiculo(placaFormatada);
         cadastro.adicionarCliente(cliente);
-        adicionarClienteNaGrid(cliente); // Atualiza as placas daquele cliente no Grid na mesma hora!
+        adicionarClienteNaGrid(cliente); 
 
         mostrarNotificacao("Placa " + placaFormatada + " vinculada ao cliente " + cliente.getNome(), NotificationVariant.LUMO_SUCCESS);
     }
@@ -280,5 +281,29 @@ public class MainView extends VerticalLayout {
     private void mostrarNotificacao(String mensagem, NotificationVariant tema) {
         Notification notificacao = Notification.show(mensagem, 4000, Notification.Position.TOP_CENTER);
         notificacao.addThemeVariants(tema);
+    }
+
+    // --- CLASSE AUXILIAR PARA O GRID DE HISTÓRICO ---
+    public static class Movimentacao {
+        private String placa;
+        private String operacao;
+        private LocalDateTime horario;
+        private String detalhes;
+
+        public Movimentacao(String placa, String operacao, LocalDateTime horario, String detalhes) {
+            this.placa = placa;
+            this.operacao = operacao;
+            this.horario = horario;
+            this.detalhes = detalhes;
+        }
+
+        public String getPlaca() { return placa; }
+        public String getOperacao() { return operacao; }
+        public String getDetalhes() { return detalhes; }
+        
+        public String getHorarioFormatado() { 
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            return horario.format(formatter); 
+        }
     }
 }
