@@ -1,15 +1,16 @@
 package g.l2.m;
+
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-
 
 @Service
 public class ServicoDeEstacionamento {
     private static final int MAX_VAGAS = 500;
     private static final double VALOR_DIARIA = 35.0;
     private static final double VALOR_HORA = 5.0;
+    
     private Map<String, TicketEntradaSaida> ticketsAtivos;
     private List<TicketEntradaSaida> ticketsEncerrados;
     private Set<String> bloqueados;
@@ -37,8 +38,22 @@ public class ServicoDeEstacionamento {
         CategoriaCliente categoria = CategoriaCliente.AVULSO;
 
         if (cliente != null) {
-            if (cliente instanceof Professor) categoria = CategoriaCliente.PROFESSOR;
-            else if (cliente instanceof Estudante) {
+            if (cliente instanceof Professor) {
+                boolean jaPossuiVeiculoEstacionado = false;
+                for (TicketEntradaSaida ticketAtivo : ticketsAtivos.values()) {
+                    if (cliente.getPlacas_veiculos().contains(ticketAtivo.getPlacaVeiculo())) {
+                        jaPossuiVeiculoEstacionado = true;
+                        break;
+                    }
+                }
+
+                if (jaPossuiVeiculoEstacionado) {
+                    categoria = CategoriaCliente.AVULSO;
+                } else {
+                    categoria = CategoriaCliente.PROFESSOR;
+                }
+                
+            } else if (cliente instanceof Estudante) {
                 if (((Estudante) cliente).getCreditos() < 0) {
                     throw new IllegalStateException("Estudante com saldo negativo. Entrada bloqueada.");
                 }
@@ -58,12 +73,15 @@ public class ServicoDeEstacionamento {
             throw new IllegalArgumentException("Veículo não encontrado no pátio.");
         }
 
-        Cliente cliente = cadastroClientes.buscarPorPlaca(placa);
-
-        if (cliente != null) {
-            ticket = cliente.calculaCusto(ticket, horarioSaida);
-        } else {
+        if (ticket.getCategoria() == CategoriaCliente.AVULSO) {
             calcularCustoAvulso(ticket, horarioSaida);
+        } else {
+            Cliente cliente = cadastroClientes.buscarPorPlaca(placa);
+            if (cliente != null) {
+                ticket = cliente.calculaCusto(ticket, horarioSaida);
+            } else {
+                calcularCustoAvulso(ticket, horarioSaida);
+            }
         }
 
         ticketsAtivos.remove(placa);

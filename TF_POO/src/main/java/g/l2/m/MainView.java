@@ -27,7 +27,6 @@ public class MainView extends VerticalLayout {
     private final ServicoDeEstacionamento servico;
     private final CadastroCliente cadastro;
     
-    // Tabelas (Grids) da interface
     private Grid<Cliente> gridClientes;
     private Grid<Movimentacao> gridMovimentacoes;
     private List<Movimentacao> historicoMovimentacoes;
@@ -43,7 +42,18 @@ public class MainView extends VerticalLayout {
         setPadding(true);
 
         H1 titulo = new H1("Sistema de Controle de Estacionamento");
-        add(titulo);
+        
+        
+        Button btnSalvarCSV = new Button("Salvar Dados (CSV)");
+        btnSalvarCSV.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+        btnSalvarCSV.addClickListener(event -> {
+            cadastro.salvarDadosNoCSV();
+            mostrarNotificacao("Dados persistidos com sucesso no arquivo CSV!", NotificationVariant.LUMO_SUCCESS);
+        });
+
+        HorizontalLayout cabecalho = new HorizontalLayout(titulo, btnSalvarCSV);
+        cabecalho.setVerticalComponentAlignment(Alignment.CENTER, btnSalvarCSV);
+        add(cabecalho);
 
         HorizontalLayout painelPrincipal = new HorizontalLayout();
         painelPrincipal.setWidthFull();
@@ -57,6 +67,9 @@ public class MainView extends VerticalLayout {
 
         painelPrincipal.add(colunaEsquerda, colunaDireita);
         add(painelPrincipal);
+
+        
+        atualizarGridCompleta();
     }
 
     private VerticalLayout criarPainelEstacionamento() {
@@ -81,7 +94,6 @@ public class MainView extends VerticalLayout {
         btnEntrada.addClickListener(event -> registrarEntrada(placaField.getValue()));
         btnSaida.addClickListener(event -> registrarSaida(placaField.getValue()));
 
-        // --- NOVA SEÇÃO: HISTÓRICO DE ENTRADAS E SAÍDAS ---
         H3 subTituloLista = new H3("Histórico da Catraca");
         gridMovimentacoes = new Grid<>();
         gridMovimentacoes.setHeight("350px");
@@ -175,12 +187,10 @@ public class MainView extends VerticalLayout {
         return layout;
     }
     
-    private void adicionarClienteNaGrid(Cliente cliente) {
-        List<Cliente> listaAtual = new ArrayList<>();
-        gridClientes.getGenericDataView().getItems().forEach(listaAtual::add);
-        listaAtual.removeIf(c -> c.getCpf_cnpj().equals(cliente.getCpf_cnpj()));
-        listaAtual.add(cliente);
-        gridClientes.setItems(listaAtual);
+    private void atualizarGridCompleta() {
+        if (cadastro != null && gridClientes != null) {
+            gridClientes.setItems(cadastro.listarTodos());
+        }
     }
 
     private void registrarEntrada(String placa) {
@@ -193,8 +203,6 @@ public class MainView extends VerticalLayout {
             LocalDateTime agora = LocalDateTime.now();
             servico.entrada(placaFormatada, agora);
             mostrarNotificacao("Entrada liberada para o veículo: " + placaFormatada, NotificationVariant.LUMO_SUCCESS);
-            
-            // Registra no histórico visual
             adicionarMovimentacaoGrid(new Movimentacao(placaFormatada, "ENTRADA", agora, "Catraca Liberada"));
         } catch (Exception e) {
             mostrarNotificacao(e.getMessage(), NotificationVariant.LUMO_ERROR);
@@ -214,19 +222,17 @@ public class MainView extends VerticalLayout {
                     ticket.getCategoria(), ticket.getValorCobrado());
             mostrarNotificacao(mensagem, NotificationVariant.LUMO_SUCCESS);
             
-            // Registra no histórico visual
             String detalhes = String.format("R$ %.2f (%s)", ticket.getValorCobrado(), ticket.getCategoria());
             adicionarMovimentacaoGrid(new Movimentacao(placaFormatada, "SAÍDA", agora, detalhes));
 
-            Cliente c = cadastro.buscarPorPlaca(placaFormatada);
-            if (c != null) adicionarClienteNaGrid(c);
+            atualizarGridCompleta();
         } catch (Exception e) {
             mostrarNotificacao(e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
     }
 
     private void adicionarMovimentacaoGrid(Movimentacao novaMovimentacao) {
-        historicoMovimentacoes.add(0, novaMovimentacao); // Adiciona sempre no topo da lista
+        historicoMovimentacoes.add(0, novaMovimentacao);
         gridMovimentacoes.setItems(historicoMovimentacoes);
     }
 
@@ -254,7 +260,7 @@ public class MainView extends VerticalLayout {
         }
 
         cadastro.adicionarCliente(novoCliente);
-        adicionarClienteNaGrid(novoCliente); 
+        atualizarGridCompleta();
         mostrarNotificacao("Cliente " + nome + " (" + categoria + ") cadastrado com sucesso!", NotificationVariant.LUMO_SUCCESS);
     }
 
@@ -273,7 +279,7 @@ public class MainView extends VerticalLayout {
 
         cliente.cadastraVeiculo(placaFormatada);
         cadastro.adicionarCliente(cliente);
-        adicionarClienteNaGrid(cliente); 
+        atualizarGridCompleta();
 
         mostrarNotificacao("Placa " + placaFormatada + " vinculada ao cliente " + cliente.getNome(), NotificationVariant.LUMO_SUCCESS);
     }
@@ -283,7 +289,6 @@ public class MainView extends VerticalLayout {
         notificacao.addThemeVariants(tema);
     }
 
-    // --- CLASSE AUXILIAR PARA O GRID DE HISTÓRICO ---
     public static class Movimentacao {
         private String placa;
         private String operacao;
