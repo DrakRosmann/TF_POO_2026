@@ -105,6 +105,14 @@ public class CadastroCliente {
     }
 
     public void adicionarCliente(Cliente cliente) {
+        
+        for (String placa : cliente.getPlacas_veiculos()) {
+            Cliente donoAtual = placasCliente.get(placa);
+            if (donoAtual != null && !donoAtual.getCpf_cnpj().equals(cliente.getCpf_cnpj())) {
+                throw new IllegalArgumentException("A placa " + placa + " já está cadastrada para o cliente " + donoAtual.getNome());
+            }
+        }
+        
         clientes.put(cliente.getCpf_cnpj(), cliente);
         for (String placa : cliente.getPlacas_veiculos()) {
             placasCliente.put(placa, cliente);
